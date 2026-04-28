@@ -1,0 +1,24 @@
+fastapi
+uvicorn
+pydantic
+requests
+
+# AI / LLM
+openai
+
+# Memory / embeddings
+faiss-cpu
+numpy
+chromadb
+
+# Voice stack
+speechrecognition
+pyttsx3
+pyaudio
+faster-whisper
+sounddevice
+webrtcvad
+pvporcupine
+
+# Utils
+python-dotenv
