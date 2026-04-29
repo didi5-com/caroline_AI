@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import faiss
 import numpy as np
+
+from core.llm_client import get_openai_client
 from openai import OpenAI
 
 from config.settings import OPENAI_API_KEY
@@ -17,6 +19,14 @@ class VectorStore:
         self.texts: list[str] = []
 
     def _embed(self, text: str) -> np.ndarray:
+        client = get_openai_client()
+        if client is None:
+            # deterministic fallback embedding for offline mode
+            seed = np.frombuffer(text.encode("utf-8"), dtype=np.uint8)
+            vec = np.zeros(self.dimension, dtype=np.float32)
+            vec[: min(len(seed), self.dimension)] = seed[: self.dimension] / 255.0
+            return vec
+
         response = client.embeddings.create(model="text-embedding-3-small", input=text)
         return np.array(response.data[0].embedding, dtype=np.float32)
 
@@ -30,6 +40,8 @@ class VectorStore:
             return []
 
         query_vec = self._embed(query).reshape(1, -1)
+        _, indices = self.index.search(query_vec, top_k)
+
         distances, indices = self.index.search(query_vec, top_k)
 
         _ = distances  # reserved for score-aware ranking in future iterations
