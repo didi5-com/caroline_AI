@@ -5,6 +5,11 @@ import faiss
 import numpy as np
 
 from core.llm_client import get_openai_client
+from openai import OpenAI
+
+from config.settings import OPENAI_API_KEY
+
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 
 class VectorStore:
@@ -37,8 +42,12 @@ class VectorStore:
         query_vec = self._embed(query).reshape(1, -1)
         _, indices = self.index.search(query_vec, top_k)
 
+        distances, indices = self.index.search(query_vec, top_k)
+
+        _ = distances  # reserved for score-aware ranking in future iterations
         results: list[str] = []
         for idx in indices[0]:
             if 0 <= idx < len(self.texts):
                 results.append(self.texts[idx])
+
         return results

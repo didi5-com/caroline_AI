@@ -5,6 +5,13 @@ from config.settings import MODEL
 from core.llm_client import get_openai_client
 from tools import file_tools, system_tools, web_tools, zapier_tools
 
+from openai import OpenAI
+
+from config.settings import MODEL, OPENAI_API_KEY
+from tools import file_tools, system_tools, web_tools, zapier_tools
+
+client = OpenAI(api_key=OPENAI_API_KEY)
+
 
 class Agent:
     def __init__(self) -> None:
@@ -35,6 +42,7 @@ class Agent:
                     tool_result = f"Tool execution failed: {exc}"
 
                 return self._final_response(message, context, str(tool_result))
+                return self._final_response(message, context, tool_result)
 
             return f"Tool not found: {tool_name}"
 
@@ -61,3 +69,21 @@ class Agent:
             return res.choices[0].message.content or ""
         except Exception as exc:  # noqa: BLE001
             return f"[Fallback] Unable to query LLM: {exc}"
+        prompt = f"""
+You are Caroline AI.
+
+User message: {message}
+
+Context: {context}
+
+Tool result (if any): {tool_result}
+
+Respond naturally and intelligently.
+""".strip()
+
+        res = client.chat.completions.create(
+            model=MODEL,
+            messages=[{"role": "user", "content": prompt}],
+        )
+
+        return res.choices[0].message.content or ""

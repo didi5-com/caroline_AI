@@ -9,6 +9,10 @@ try:
 except Exception:
     sd = None
 
+import queue
+import sounddevice as sd
+import numpy as np
+
 
 class AudioBuffer:
     def __init__(self, samplerate=16000):
@@ -24,6 +28,13 @@ class AudioBuffer:
         if sd is None:
             raise RuntimeError("sounddevice is not available")
 
+    def callback(self, indata, frames, time, status):
+        _ = (frames, time, status)
+        self.buffer.put(indata.copy())
+
+    def start_stream(self):
+        print("🎙️ Audio stream started...")
+
         self.stream = sd.InputStream(
             samplerate=self.samplerate,
             channels=1,
@@ -34,6 +45,7 @@ class AudioBuffer:
 
     def get_audio_chunk(self):
         chunks = []
+
         while not self.buffer.empty():
             chunks.append(self.buffer.get())
 
