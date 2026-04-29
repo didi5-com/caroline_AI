@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Caroline Web Debug UI</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#0b0f1a; color:#d1fae5; margin:0; }
+    .wrap { max-width: 900px; margin: 30px auto; padding: 16px; }
+    #log { background:#0f172a; min-height: 350px; padding:12px; border-radius:8px; overflow:auto; }
+    input,button { padding:10px; border-radius:8px; border:none; }
+    input { width:75%; background:#1e293b; color:#fff; }
+    button { background:#0ea5e9; color:white; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h2>Caroline Web Debug UI</h2>
+    <div id="log"></div>
+    <div style="margin-top:12px;display:flex;gap:8px;">
+      <input id="msg" placeholder="Type message..." />
+      <button onclick="sendMsg()">Send</button>
+    </div>
+  </div>
+
+  <script>
+    const API = 'http://127.0.0.1:8000/chat/';
+    const log = document.getElementById('log');
+    function append(line){ log.innerHTML += `<div>${line}</div>`; log.scrollTop = log.scrollHeight; }
+
+    async function sendMsg(){
+      const input = document.getElementById('msg');
+      const message = input.value.trim();
+      if(!message) return;
+      append(`<b>You:</b> ${message}`);
+      input.value = '';
+
+      try {
+        const res = await fetch(API, {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({user_id:'web_user', message})
+        });
+        const data = await res.json();
+        append(`<b>Caroline:</b> ${data.response ?? JSON.stringify(data)}`);
+      } catch (e) {
+        append(`<span style="color:#fca5a5">Error: ${e}</span>`);
+      }
+    }
+  </script>
+</body>
+</html>
